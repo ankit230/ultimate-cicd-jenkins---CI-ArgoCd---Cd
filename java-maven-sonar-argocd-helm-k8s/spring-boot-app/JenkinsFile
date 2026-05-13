@@ -47,27 +47,36 @@ pipeline {
         }
       }
     }
-    stage('Update Deployment File') {
-        environment {
-            GIT_REPO_NAME = "ultimate-cicd-jenkins---CI-ArgoCd---Cd"
-            GIT_USER_NAME = "ankit230"
-        }
-        steps {
-            withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                sh '''
+   stage('Update Deployment File') {
+    environment {
+        GIT_REPO_NAME = "ultimate-cicd-jenkins---CI-ArgoCd---Cd"
+        GIT_USER_NAME = "ankit230"
+    }
 
-                    cd /var/lib/jenkins/workspace/cicd
+    steps {
+        withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
 
-                    git config user.email "yadav.ankit3333@gmail.com"
-                    git config user.name "ankit230"
-                    BUILD_NUMBER=${BUILD_NUMBER}
-                    sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
-                    git add java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
-                    git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                    git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
-                '''
-            }
+            sh '''
+                rm -rf temp-repo
+
+                git clone https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git temp-repo
+
+                cd temp-repo
+
+                git config user.email "yadav.ankit3333@gmail.com"
+                git config user.name "ankit230"
+
+                sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" \
+                java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
+
+                git add .
+
+                git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+
+                git push origin main
+            '''
         }
     }
+}
   }
 }
